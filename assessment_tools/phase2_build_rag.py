@@ -88,7 +88,14 @@ def split_into_chunks(text: str, chunk_size: int, overlap: int) -> list[dict]:
 # ===================================================
 # Step3: ChromaDBにチャンクを保存する
 # ===================================================
-def build_chroma_db(chunks: list[dict]):
+def build_chroma_db(chunks: list[dict], use_memory: bool = False):
+    """
+    チャンクをベクトル化してChromaDBに保存する。
+
+    Args:
+        chunks:     split_into_chunks() の返り値
+        use_memory: True にするとディスクに書かずインメモリで動作（Streamlit Cloud向け）
+    """
     print(f"\n🔧 ChromaDB構築中...")
 
     # 埋め込みモデルをロード（初回はダウンロードが走ります）
@@ -96,8 +103,12 @@ def build_chroma_db(chunks: list[dict]):
     print(f"   （初回は数分かかる場合があります）")
     model = SentenceTransformer(EMBED_MODEL)
 
-    # ChromaDBクライアントを作成（フォルダに保存）
-    client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    # ChromaDBクライアントを作成
+    if use_memory:
+        print(f"   インメモリモードで動作します（再起動で消去されます）")
+        client = chromadb.Client()
+    else:
+        client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
 
     # コレクションが既にあれば削除して作り直す（再実行時のため）
     existing = [c.name for c in client.list_collections()]

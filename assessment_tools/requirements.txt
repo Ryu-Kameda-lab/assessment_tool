@@ -1,9 +1,9 @@
 streamlit
 pdf2image
 Pillow
-google-generativeai      # Vision OCR（Gemini Flash）
-chromadb                 # ベクトルDB（ローカル）
-sentence-transformers    # 埋め込みモデル（ローカル・無料）
-langchain                # テキスト分割ユーティリティ
-openpyxl                 # Excel読み書き
-python-dotenv            # APIキー管理
+google-generativeai
+google-genai
+chromadb
+sentence-transformers
+openpyxl
+python-dotenv

@@ -1,8 +1,9 @@
 # question_spec.py
 
 import openpyxl
+from pathlib import Path
 
-SPEC_FILE = "QuestionSpec_地域防災計画確認票.xlsx"
+SPEC_FILE = Path(__file__).parent / "QuestionSpec_地域防災計画確認票.xlsx"
 
 def load_question_spec(filepath: str = SPEC_FILE) -> list[dict]:
     """

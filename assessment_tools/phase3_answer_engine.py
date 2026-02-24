@@ -164,17 +164,20 @@ def answer_batch(questions: list[dict], collection, embed_model) -> dict:
 # ===================================================
 # 105問すべてに回答する
 # ===================================================
-def answer_all(progress_callback=None) -> dict:
+def answer_all(collection=None, progress_callback=None) -> dict:
     """
     全105問に回答して結果を返す
 
+    collection:        ChromaDBのコレクションオブジェクト（省略時はディスクから読み込む）
     progress_callback: Streamlitのプログレスバー更新用
     返り値: { QID(int): {"answer": "...", "evidence_pages": [...]} }
     """
-    print("📂 ChromaDB読み込み中...")
-    client     = chromadb.PersistentClient(path=CHROMA_DB_PATH)
-    collection = client.get_collection(COLLECTION_NAME)
     embed_model = SentenceTransformer(EMBED_MODEL)
+
+    if collection is None:
+        print("📂 ChromaDB読み込み中...")
+        client     = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+        collection = client.get_collection(COLLECTION_NAME)
 
     questions = load_question_spec()
     all_answers = {}

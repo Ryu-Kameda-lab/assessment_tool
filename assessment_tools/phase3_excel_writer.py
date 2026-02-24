@@ -1,11 +1,11 @@
 # phase3_excel_writer.py
 
-import shutil
+import io
 from datetime import datetime
 from pathlib import Path
 import openpyxl
 
-TEMPLATE_FILE  = "地域防災計画確認票.xlsm"
+TEMPLATE_FILE  = Path(__file__).parent / "地域防災計画確認票.xlsm"
 SHEET_NAME     = "Sheet1"
 HEADER_ROW     = 2   # ヘッダー行（質問No / 確認事項 / 回答）
 DATA_START_ROW = 3   # 質問データ開始行
@@ -14,16 +14,16 @@ COL_ANSWER     = 4   # D列: 回答
 COL_EVIDENCE   = 5   # E列: 根拠ページ（追記）
 
 
-def write_answers_to_excel(answers: dict, template_path: str = TEMPLATE_FILE) -> str:
+def write_answers_to_excel(answers: dict, template_path: Path = TEMPLATE_FILE) -> bytes:
     """
-    回答辞書をExcelテンプレートに書き込み、出力ファイルパスを返す。
+    回答辞書をExcelテンプレートに書き込み、バイト列を返す。
 
     Args:
         answers: { qid(int): {"answer": str, "evidence_pages": list[int]} }
         template_path: テンプレートExcelのパス（.xlsm）
 
     Returns:
-        出力ファイルのパス文字列（例: output_answered_20250224.xlsx）
+        Excelファイルのバイト列（st.download_button の data に直接渡せる）
     """
     # テンプレートを読み込む（VBAマクロは保持しない。出力は.xlsx）
     wb = openpyxl.load_workbook(template_path, keep_vba=False, data_only=True)
@@ -61,13 +61,12 @@ def write_answers_to_excel(answers: dict, template_path: str = TEMPLATE_FILE) ->
         else:
             ws.cell(row=row_num, column=COL_EVIDENCE).value = ""
 
-    # 出力ファイル名（日付付き）
-    date_str    = datetime.now().strftime("%Y%m%d")
-    output_path = f"output_answered_{date_str}.xlsx"
-
-    wb.save(output_path)
-    print(f"✅ Excel書き込み完了: {output_path}  ({len(answers)}問)")
-    return output_path
+    # メモリ上に保存してバイト列で返す
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    print(f"✅ Excel書き込み完了 ({len(answers)}問)")
+    return buffer.getvalue()
 
 
 # ===================================================
@@ -82,5 +81,9 @@ if __name__ == "__main__":
         }
         for i in range(1, 106)
     }
-    path = write_answers_to_excel(dummy_answers)
-    print(f"出力先: {path}")
+    excel_bytes = write_answers_to_excel(dummy_answers)
+    date_str = datetime.now().strftime("%Y%m%d")
+    output_path = f"output_answered_{date_str}.xlsx"
+    with open(output_path, "wb") as f:
+        f.write(excel_bytes)
+    print(f"出力先: {output_path}")
